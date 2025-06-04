@@ -19,13 +19,12 @@ const hopByHopHeaders = new Set([
   'upgrade'
 ]);
 
-// Main request handler
 module.exports = async (req, res) => {
   if (cors(req, res)) return;
 
   if (req.url === '/' || req.url === '/favicon.ico') {
     try {
-      const markdownString = await readFile('./README.md', { encoding: 'utf8' });
+      const markdownString = await readFile('./readme.md', { encoding: 'utf8' });
       const content = await marked(markdownString);
       res.setHeader('Content-Type', 'text/html; charset=utf8');
       res.end(content);
@@ -38,12 +37,12 @@ module.exports = async (req, res) => {
     }
   }
 
-  const parsed = parse(req.url.slice(1)); // remove leading "/"
+  const parsed = parse(req.url.slice(1)); // Remove leading "/"
   const target = format(parsed);
+  const isHttps = target.startsWith('https');
+  const proxy = isHttps ? https : http;
 
-  const proxy = target.startsWith('https') ? https : http;
-
-  const proxyReq = proxy.request({
+  const requestOptions = {
     method: req.method,
     headers: Object.fromEntries(Object.entries(req.headers).filter(
       ([key]) => !hopByHopHeaders.has(key.toLowerCase())
@@ -51,7 +50,10 @@ module.exports = async (req, res) => {
     hostname: parsed.hostname,
     port: parsed.port,
     path: parsed.path,
-  }, proxyRes => {
+    rejectUnauthorized: false // 🔥 Disable SSL cert verification (use with caution)
+  };
+
+  const proxyReq = proxy.request(requestOptions, proxyRes => {
     Object.entries(proxyRes.headers).forEach(([key, value]) => {
       if (!hopByHopHeaders.has(key.toLowerCase())) {
         res.setHeader(key, value);
@@ -71,9 +73,9 @@ module.exports = async (req, res) => {
   req.pipe(proxyReq);
 };
 
-// Start the server if this file is run directly
+// Start the server when run directly
 if (require.main === module) {
-  const PORT = process.env.PORT || 4000;
+  const PORT = process.env.PORT || 8080;
   const server = http.createServer((req, res) => {
     module.exports(req, res).catch(err => {
       console.error(err);
