@@ -6,8 +6,8 @@
     "start": "node server.js"
   },
   "files": [
-    "index.js",
-    "readme.md"
+    "server.js",
+    "README.md"
   ],
   "dependencies": {
     "access-control": "^1.0.0",
