@@ -70,3 +70,19 @@ module.exports = async (req, res) => {
 
   req.pipe(proxyReq);
 };
+
+// Start the server if this file is run directly
+if (require.main === module) {
+  const PORT = process.env.PORT || 8080;
+  const server = http.createServer((req, res) => {
+    module.exports(req, res).catch(err => {
+      console.error(err);
+      res.statusCode = 500;
+      res.end('Internal Server Error');
+    });
+  });
+
+  server.listen(PORT, () => {
+    console.log(`CORS Proxy running at http://localhost:${PORT}/`);
+  });
+}
