@@ -73,7 +73,7 @@ module.exports = async (req, res) => {
 
 // Start the server if this file is run directly
 if (require.main === module) {
-  const PORT = process.env.PORT || 8080;
+  const PORT = process.env.PORT || 4000;
   const server = http.createServer((req, res) => {
     module.exports(req, res).catch(err => {
       console.error(err);
